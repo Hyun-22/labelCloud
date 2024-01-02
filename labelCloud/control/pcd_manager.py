@@ -61,8 +61,10 @@ class PointCloudManger(object):
         if self.pcd_folder.is_dir():
             self.pcds = []
             for file in sorted(self.pcd_folder.iterdir()):
-                if file.suffix in PointCloudManger.PCD_EXTENSIONS:
+                if file.suffix in PointCloudManger.PCD_EXTENSIONS and "rslidar" in file.name:
                     self.pcds.append(file)
+            print("TOTAL POINT CLOUDS: ", len(self.pcds))
+            print(self.pcds)
         else:
             logging.warning(
                 f"Point cloud path {self.pcd_folder} is not a valid directory."

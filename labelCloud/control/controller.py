@@ -16,6 +16,9 @@ from .config_manager import config
 from .drawing_manager import DrawingManager
 from .pcd_manager import PointCloudManger
 
+import open3d as o3d
+import math
+
 
 class Controller:
     MOVEMENT_THRESHOLD = 0.1
@@ -62,8 +65,8 @@ class Controller:
 
     # POINT CLOUD METHODS
     def next_pcd(self, save: bool = True) -> None:
-        if save:
-            self.save()
+        # if save:
+        #     self.save()
         if self.pcd_manager.pcds_left():
             previous_bboxes = self.bbox_controller.bboxes
             self.pcd_manager.get_next_pcd()
@@ -80,7 +83,7 @@ class Controller:
             self.view.button_next_pcd.setEnabled(False)
 
     def prev_pcd(self) -> None:
-        self.save()
+        # self.save()
         if self.pcd_manager.current_id > 0:
             self.pcd_manager.get_prev_pcd()
             self.reset()
@@ -88,7 +91,7 @@ class Controller:
             self.bbox_controller.set_active_bbox(0)
 
     def custom_pcd(self, custom: int) -> None:
-        self.save()
+        # self.save()
         self.pcd_manager.get_custom_pcd(custom)
         self.reset()
         self.bbox_controller.set_bboxes(self.pcd_manager.get_labels_from_file())
@@ -101,7 +104,161 @@ class Controller:
         if LabelConfig().type == LabelingMode.SEMANTIC_SEGMENTATION:
             assert self.pcd_manager.pointcloud is not None
             self.pcd_manager.pointcloud.save_segmentation_labels()
+        
+        scala_data = self.scala_load(str(self.pcd_manager.pcd_path))
+        radar_data = self.radar_load(str(self.pcd_manager.pcd_path))
+        
+        self.scala_view(scala_data, self.bbox_controller.bboxes)
+        self.radar_view(radar_data, self.bbox_controller.bboxes)
+    
+    def scala_load(self, rs32_path):    
+        scala_path = rs32_path.replace('rslidar', 'scala')
+        # scala_path = os.path.join("C:\\Users\\ailab\\git\\labelCloud", scala_path)
+        points = np.fromfile(scala_path, dtype=np.float32).reshape(-1, 4)
+        return points[:, :3]
+        
+    def radar_load(self, rs32_path):
+        radar_path = rs32_path.replace('rslidar', 'radar')
+        # radar_path = os.path.join("C:\\Users\\ailab\\git\\labelCloud", radar_path)
+        points = np.fromfile(radar_path, dtype=np.float32).reshape(-1, 6)
+        return points[:, :3]
 
+    def scala_view(self, scala_data, bboxes):
+        size = scala_data.shape[0]
+
+        # Open3D 포인트 클라우드 및 bounding box 시각화
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(scala_data)
+        
+        colors = np.tile([0.2, 1, 0.2], (size, 1))  # Red color for each point
+        pcd.colors = o3d.utility.Vector3dVector(colors)
+
+        # Initialize Open3D visualizer
+        vis = o3d.visualization.Visualizer()
+        vis.create_window()
+
+        # Add point cloud to the visualizer
+        vis.add_geometry(pcd)
+
+        axis = o3d.geometry.TriangleMesh.create_coordinate_frame(size=3, origin=[0,0,0])
+
+
+        # Add bounding boxes to the visualizer
+        for box in bboxes:
+            # box_center = np.array([box[0], box[1], box[2]])
+            box_c = box.get_center()
+            c_x = box_c[0] - 3.037
+            c_y = box_c[1] - 0.255
+            c_z = box_c[2] + 1.2  
+            lenght = float(box.length) + 1
+            width = float(box.width) + 1
+            height = float(box.height) + 1
+            x_rotate_rad = math.radians(float(box.z_rotation)) - math.radians(1.4738)
+            
+            box_center = np.array([c_x, c_y, c_z])
+            
+            # box_orientation = box[6]
+            # box_orientation = x_rotate
+            
+            # box_class = box[7]
+            box_class = box.classname
+            
+            # print(box_class)
+
+            # Create a rotation matrix from the yaw angle
+            rotation_matrix = np.array([[np.cos(x_rotate_rad), -np.sin(x_rotate_rad), 0],
+                                        [np.sin(x_rotate_rad), np.cos(x_rotate_rad), 0],
+                                        [0, 0, 1]])
+
+            # Create an OrientedBoundingBox
+            # bbox = o3d.geometry.OrientedBoundingBox(center=box_center, R=rotation_matrix, extent=np.array([box[3], box[4], box[5]]))
+            bbox = o3d.geometry.OrientedBoundingBox(center=box_center, R=rotation_matrix, extent=np.array([lenght, width, height]))
+            if box_class == "Vehicle" or box_class == "Small_vehicle":
+                bbox.color = (0.8, 0.5, 0.3)
+            elif box_class == "Pedestrian":
+                bbox.color = (0, 0.3, 1)
+            elif box_class == "Bicyclist":
+                bbox.color = (0, 1, 0)
+            elif box_class == "Truck" or box_class == "Big_vehicle":
+                bbox.color = (0.5, 0.5, 0)
+            else:
+                bbox.color = (0.8, 0.2, 0)
+
+            vis.add_geometry(bbox)
+        
+        vis.add_geometry(axis)
+
+        # Run the visualizer
+        vis.run()
+        vis.destroy_window()
+    def radar_view(self, radar_data, bboxes):
+        size = radar_data.shape[0]
+
+        # Open3D 포인트 클라우드 및 bounding box 시각화
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(radar_data)
+        
+        colors = np.tile([0.2, 1, 0.2], (size, 1))  # Red color for each point
+        pcd.colors = o3d.utility.Vector3dVector(colors)
+
+        # Initialize Open3D visualizer
+        vis = o3d.visualization.Visualizer()
+        vis.create_window()
+
+        # Add point cloud to the visualizer
+        vis.add_geometry(pcd)
+
+        axis = o3d.geometry.TriangleMesh.create_coordinate_frame(size=3, origin=[0,0,0])
+
+
+        # Add bounding boxes to the visualizer
+        for box in bboxes:
+            # box_center = np.array([box[0], box[1], box[2]])
+            box_c = box.get_center()
+            c_x = box_c[0] - 3.037
+            c_y = box_c[1] - 0.255
+            c_z = box_c[2] + 1.2  
+            lenght = float(box.length) + 1
+            width = float(box.width) + 1
+            height = float(box.height) + 1
+            x_rotate_rad = math.radians(float(box.z_rotation)) - math.radians(1.4738)
+            
+            box_center = np.array([c_x, c_y, c_z])
+            
+            # box_orientation = box[6]
+            # box_orientation = x_rotate
+            
+            # box_class = box[7]
+            box_class = box.classname
+            
+            # print(box_class)
+
+            # Create a rotation matrix from the yaw angle
+            rotation_matrix = np.array([[np.cos(x_rotate_rad), -np.sin(x_rotate_rad), 0],
+                                        [np.sin(x_rotate_rad), np.cos(x_rotate_rad), 0],
+                                        [0, 0, 1]])
+
+            # Create an OrientedBoundingBox
+            # bbox = o3d.geometry.OrientedBoundingBox(center=box_center, R=rotation_matrix, extent=np.array([box[3], box[4], box[5]]))
+            bbox = o3d.geometry.OrientedBoundingBox(center=box_center, R=rotation_matrix, extent=np.array([lenght, width, height]))
+            if box_class == "Vehicle" or box_class == "Small_vehicle":
+                bbox.color = (0.8, 0.5, 0.3)
+            elif box_class == "Pedestrian":
+                bbox.color = (0, 0.3, 1)
+            elif box_class == "Bicyclist":
+                bbox.color = (0, 1, 0)
+            elif box_class == "Truck" or box_class == "Big_vehicle":
+                bbox.color = (0.5, 0.5, 0)
+            else:
+                bbox.color = (0.8, 0.2, 0)
+
+            vis.add_geometry(bbox)
+        
+        vis.add_geometry(axis)
+
+        # Run the visualizer
+        vis.run()
+        vis.destroy_window()
     def reset(self) -> None:
         """Resets the controllers and bounding boxes from the current screen."""
         self.bbox_controller.reset()
