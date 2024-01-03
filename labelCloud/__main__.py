@@ -100,29 +100,30 @@ def export_rscube_to_json(src_root, dst_root):
         # write label json
         dst_label = src_label.replace(src_root, dst_root)
         
-        for line in lines:
-            
-            line = line.strip().split(' ')
-            centroid_x = line[0]
-            centroid_y = line[1]
-            centroid_z = line[2]
+        if not os.path.isfile(dst_label):
+            for line in lines:
+                
+                line = line.strip().split(' ')
+                centroid_x = line[0]
+                centroid_y = line[1]
+                centroid_z = line[2]
 
-            dimensions_length = line[3]
-            dimensions_width = line[4]
-            dimensions_height = line[5]
-            
-            rotations_z = line[6]
-            
-            label_idx = line[7]
-            detection_conf = line[8]
-            class_conf = line[9]
-            name = line[10]
-            
-            write_str += "{} 0 0 0 0 0 0 0 {} {} {} {} {} {} {} {} {} {}\n".format(name, dimensions_height, dimensions_width, dimensions_length, centroid_x, centroid_y, centroid_z, rotations_z, label_idx, detection_conf, class_conf)
-            # with open(dst_label, 'a') as dst_txt:
-            #     dst_txt.write("{} 0 0 0 0 0 0 0 {} {} {} {} {} {} {} \n".format(name, dimensions_height, dimensions_width, dimensions_length, centroid_x, centroid_y, centroid_z, rotations_z))
-        with open(dst_label, 'w') as dst_txt:
-            dst_txt.write(write_str)
+                dimensions_length = line[3]
+                dimensions_width = line[4]
+                dimensions_height = line[5]
+                
+                rotations_z = line[6]
+                
+                label_idx = line[7]
+                detection_conf = line[8]
+                class_conf = line[9]
+                name = line[10]
+                
+                write_str += "{} 0 0 0 0 0 0 0 {} {} {} {} {} {} {} {} {} {}\n".format(name, dimensions_height, dimensions_width, dimensions_length, centroid_x, centroid_y, centroid_z, rotations_z, label_idx, detection_conf, class_conf)
+                # with open(dst_label, 'a') as dst_txt:
+                #     dst_txt.write("{} 0 0 0 0 0 0 0 {} {} {} {} {} {} {} \n".format(name, dimensions_height, dimensions_width, dimensions_length, centroid_x, centroid_y, centroid_z, rotations_z))
+            with open(dst_label, 'w') as dst_txt:
+                dst_txt.write(write_str)
 
 def start_gui():
     import sys

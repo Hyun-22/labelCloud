@@ -31,6 +31,9 @@ class BBox(object):
         length: Optional[float] = None,
         width: Optional[float] = None,
         height: Optional[float] = None,
+        bbox_conf: float = 0,
+        clf_conf: float = 0,
+        label_idx: int = 0,
     ) -> None:
         self.center: Point3D = (cx, cy, cz)
         self.length: float = length or config.getfloat(

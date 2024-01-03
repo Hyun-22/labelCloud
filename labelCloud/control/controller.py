@@ -105,11 +105,11 @@ class Controller:
             assert self.pcd_manager.pointcloud is not None
             self.pcd_manager.pointcloud.save_segmentation_labels()
         
-        scala_data = self.scala_load(str(self.pcd_manager.pcd_path))
-        radar_data = self.radar_load(str(self.pcd_manager.pcd_path))
+        # scala_data = self.scala_load(str(self.pcd_manager.pcd_path))
+        # radar_data = self.radar_load(str(self.pcd_manager.pcd_path))
         
-        self.scala_view(scala_data, self.bbox_controller.bboxes)
-        self.radar_view(radar_data, self.bbox_controller.bboxes)
+        # self.scala_view(scala_data, self.bbox_controller.bboxes)
+        # self.radar_view(radar_data, self.bbox_controller.bboxes)
     
     def scala_load(self, rs32_path):    
         scala_path = rs32_path.replace('rslidar', 'scala')
