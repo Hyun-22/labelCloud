@@ -51,6 +51,9 @@ TEMPLATE_META = {
     "dimensions": "0 0 0",
     "location": "0 0 0",
     "rotation_y": "0",
+    "bbox_conf":"0",
+    "clf_conf":"0",
+    "label_idx":"0",
 }
 
 
@@ -94,6 +97,9 @@ class KittiFormat(BaseLabelFormat):
                     "dimensions": " ".join(line_elements[8:11]),
                     "location": " ".join(line_elements[11:14]),
                     "rotation_y": line_elements[14],
+                    "bbox_conf": line_elements[15],
+                    "clf_conf": line_elements[16],
+                    "label_idx": line_elements[17],
                 }
 
                 centroid = tuple([float(v) for v in meta["location"].split()])
