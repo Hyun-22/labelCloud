@@ -8,19 +8,19 @@
         {
             "name": "cart",
             "id": 1,
-            "color": "#f156ff"
+            "color": "#ffbf35"
         },
         {
             "name": "box",
             "id": 2,
-            "color": "#f57900"
+            "color": "#f156ff"
         }
     ],
     "default": 0,
     "type": "object_detection",
-    "format": "centroid_abs",
+    "format": "kitti_untransformed",
     "created_with": {
         "name": "labelCloud",
-        "version": "1.0.1"
+        "version": "1.1.0"
     }
 }
