@@ -113,10 +113,11 @@ def export_rscube_to_json(src_root, dst_root):
                 dimensions_height = line[5]
                 
                 rotations_z = line[6]
+        
+                detection_conf = line[7]
+                class_conf = line[8]
+                label_idx = line[9]
                 
-                label_idx = line[7]
-                detection_conf = line[8]
-                class_conf = line[9]
                 name = line[10]
                 
                 write_str += "{} 0 0 0 0 0 0 0 {} {} {} {} {} {} {} {} {} {}\n".format(name, dimensions_height, dimensions_width, dimensions_length, centroid_x, centroid_y, centroid_z, rotations_z, label_idx, detection_conf, class_conf)
